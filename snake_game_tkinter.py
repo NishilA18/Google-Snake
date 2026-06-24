@@ -22,6 +22,9 @@ class SnakeGame:
         self.FOOD_COLOR = "#F44336"
         self.TEXT_COLOR = "white"
         
+        # Key states
+        self.keys_pressed = set()
+        
         # Create canvas
         self.canvas = tk.Canvas(
             root,
@@ -31,14 +34,6 @@ class SnakeGame:
             highlightthickness=0
         )
         self.canvas.pack(pady=10)
-        self.canvas.focus()
-        
-        # Bind keys to root window for better capture
-        self.root.bind("<Up>", self.on_key_press)
-        self.root.bind("<Down>", self.on_key_press)
-        self.root.bind("<Left>", self.on_key_press)
-        self.root.bind("<Right>", self.on_key_press)
-        self.root.bind("<space>", self.on_key_press)
         
         # Score label
         self.score_label = tk.Label(root, text="Score: 0", fg=self.TEXT_COLOR, bg="#1a1a1a", font=("Arial", 16))
@@ -49,11 +44,43 @@ class SnakeGame:
         self.game_over_label.pack()
         
         # Instructions label
-        self.instruction_label = tk.Label(root, text="Use Arrow Keys to move | Press SPACE to restart", fg="#999999", bg="#1a1a1a", font=("Arial", 10))
+        self.instruction_label = tk.Label(root, text="Use WASD or Arrow Keys to move | Press SPACE to restart", fg="#999999", bg="#1a1a1a", font=("Arial", 10))
         self.instruction_label.pack()
+        
+        # Bind all keys
+        self.root.bind("<KeyPress>", self.key_press)
+        self.root.bind("<KeyRelease>", self.key_release)
         
         # Initialize game state
         self.reset_game()
+    
+    def key_press(self, event):
+        self.keys_pressed.add(event.keysym.lower())
+        self.handle_movement()
+    
+    def key_release(self, event):
+        self.keys_pressed.discard(event.keysym.lower())
+    
+    def handle_movement(self):
+        """Handle movement based on pressed keys"""
+        if self.game_over:
+            if 'space' in self.keys_pressed:
+                self.reset_game()
+            return
+        
+        # Check for direction changes
+        if 'up' in self.keys_pressed or 'w' in self.keys_pressed:
+            if self.direction != (0, 1):
+                self.next_direction = (0, -1)
+        elif 'down' in self.keys_pressed or 's' in self.keys_pressed:
+            if self.direction != (0, -1):
+                self.next_direction = (0, 1)
+        elif 'left' in self.keys_pressed or 'a' in self.keys_pressed:
+            if self.direction != (1, 0):
+                self.next_direction = (-1, 0)
+        elif 'right' in self.keys_pressed or 'd' in self.keys_pressed:
+            if self.direction != (-1, 0):
+                self.next_direction = (1, 0)
     
     def reset_game(self):
         """Initialize or reset the game state"""
@@ -69,6 +96,7 @@ class SnakeGame:
         self.game_over = False
         self.game_over_label.config(text="")
         self.update_score_display()
+        self.keys_pressed.clear()
         self.game_loop()
     
     def spawn_food(self):
@@ -79,29 +107,12 @@ class SnakeGame:
             if food not in self.snake:
                 return food
     
-    def on_key_press(self, event):
-        """Handle key press events"""
-        key = event.keysym
-        
-        if self.game_over and key == "space":
-            self.reset_game()
-            return
-        
-        # Direction mappings
-        if key == "Up" and self.direction != (0, 1):
-            self.next_direction = (0, -1)
-        elif key == "Down" and self.direction != (0, -1):
-            self.next_direction = (0, 1)
-        elif key == "Left" and self.direction != (1, 0):
-            self.next_direction = (-1, 0)
-        elif key == "Right" and self.direction != (-1, 0):
-            self.next_direction = (1, 0)
-    
     def update(self):
         """Update game state"""
         if self.game_over:
             return
         
+        self.handle_movement()
         self.direction = self.next_direction
         
         # Calculate new head
@@ -168,11 +179,7 @@ class SnakeGame:
         """Main game loop"""
         self.update()
         self.draw()
-        
-        if not self.game_over:
-            self.root.after(100, self.game_loop)  # 100ms = ~10 FPS
-        else:
-            self.root.after(100, self.game_loop)  # Keep running to allow restart
+        self.root.after(100, self.game_loop)  # 100ms = ~10 FPS
 
 if __name__ == "__main__":
     root = tk.Tk()
