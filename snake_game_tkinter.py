@@ -31,8 +31,14 @@ class SnakeGame:
             highlightthickness=0
         )
         self.canvas.pack(pady=10)
-        self.canvas.bind("<Key>", self.on_key_press)
         self.canvas.focus()
+        
+        # Bind keys to root window for better capture
+        self.root.bind("<Up>", self.on_key_press)
+        self.root.bind("<Down>", self.on_key_press)
+        self.root.bind("<Left>", self.on_key_press)
+        self.root.bind("<Right>", self.on_key_press)
+        self.root.bind("<space>", self.on_key_press)
         
         # Score label
         self.score_label = tk.Label(root, text="Score: 0", fg=self.TEXT_COLOR, bg="#1a1a1a", font=("Arial", 16))
@@ -41,6 +47,10 @@ class SnakeGame:
         # Game over label
         self.game_over_label = tk.Label(root, text="", fg="#FFC107", bg="#1a1a1a", font=("Arial", 20, "bold"))
         self.game_over_label.pack()
+        
+        # Instructions label
+        self.instruction_label = tk.Label(root, text="Use Arrow Keys to move | Press SPACE to restart", fg="#999999", bg="#1a1a1a", font=("Arial", 10))
+        self.instruction_label.pack()
         
         # Initialize game state
         self.reset_game()
